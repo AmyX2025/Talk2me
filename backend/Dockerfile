@@ -8,6 +8,8 @@ ENV PYTHONUNBUFFERED=1
 # Install system dependencies (FFmpeg is critical for audio processing)
 RUN apt-get update && apt-get install -y \
     ffmpeg \
+    build-essential \
+    python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory in the container
