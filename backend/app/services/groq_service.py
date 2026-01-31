@@ -77,27 +77,46 @@ class GroqService:
             if file_size > MAX_SIZE_BYTES:
                 print(f"音频文件过大 ({file_size / 1024 / 1024:.2f} MB)，正在压缩...")
                 
-                # 加载音频
-                audio = AudioSegment.from_file(audio_path)
-                
-                # 转换为单声道，降低采样率和比特率
-                # 32k bitrate 对于语音识别通常足够，且能大幅减小体积 (约 0.25MB/分钟)
-                # 这样 24MB 可以容纳近 100 分钟的音频
-                audio = audio.set_channels(1).set_frame_rate(16000)
-                
                 # 创建临时文件路径
                 import tempfile
+                import subprocess
+                
                 with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
                     temp_path = tmp.name
                 
-                # 导出压缩后的音频
-                audio.export(temp_path, format="mp3", bitrate="32k")
+                # 使用 FFmpeg 命令行进行压缩 (比 pydub 更节省内存)
+                # -y: 覆盖
+                # -i: 输入
+                # -ac 1: 单声道
+                # -ar 16000: 16kHz 采样率 (Whisper 只需要 16k)
+                # -b:a 32k: 比特率压缩
+                cmd = [
+                    "ffmpeg", "-y",
+                    "-i", audio_path,
+                    "-ac", "1",
+                    "-ar", "16000",
+                    "-b:a", "32k",
+                    temp_path
+                ]
                 
-                file_to_upload = temp_path
-                is_temp_file = True
+                # 执行压缩
+                process = subprocess.run(
+                    cmd, 
+                    stdout=subprocess.PIPE, 
+                    stderr=subprocess.PIPE,
+                    check=False  # 手动检查 returncode
+                )
                 
-                new_size = os.path.getsize(temp_path)
-                print(f"压缩完成，新大小: {new_size / 1024 / 1024:.2f} MB")
+                if process.returncode != 0:
+                    print(f"FFmpeg compression failed: {process.stderr.decode()}")
+                    # 如果压缩失败，尝试原样上传（可能会报413，但至少试过）
+                    # 或者抛出异常
+                    pass 
+                else:
+                    file_to_upload = temp_path
+                    is_temp_file = True
+                    new_size = os.path.getsize(temp_path)
+                    print(f"压缩完成，新大小: {new_size / 1024 / 1024:.2f} MB")
             
             # 开始转写
             with open(file_to_upload, "rb") as file:
