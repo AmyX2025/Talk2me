@@ -26,7 +26,6 @@ COPY . /app/
 RUN mkdir -p storage/audio
 
 # Expose the port the app runs on (Render sets PORT env, but default is 8000)
-PORT 8000
 EXPOSE 8000
 
 # Command to run the application using uvicorn
