@@ -51,18 +51,18 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] py-16 font-sans flex flex-col justify-center">
+    <div className="min-h-screen bg-[#FDFBF7] py-8 md:py-16 font-sans flex flex-col justify-center">
       <div className="container mx-auto px-4 max-w-2xl">
-        <div className="text-center mb-12 transform hover:scale-105 transition-transform duration-500">
-          <h1 className="text-6xl font-black text-gray-900 mb-4 tracking-tight" style={{ textShadow: "4px 4px 0px #CBD5E0" }}>
+        <div className="text-center mb-8 md:mb-12 transform hover:scale-105 transition-transform duration-500">
+          <h1 className="text-4xl md:text-6xl font-black text-gray-900 mb-4 tracking-tight" style={{ textShadow: "4px 4px 0px #CBD5E0" }}>
             Talk2Me
           </h1>
-          <p className="text-xl text-gray-600 font-medium italic">
+          <p className="text-lg md:text-xl text-gray-600 font-medium italic">
             Your friendly AI companion for podcast shadowing & chat.
           </p>
         </div>
 
-        <div className="bg-white rounded-[2rem] p-8 border-2 border-gray-900 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] mb-10 relative overflow-hidden">
+        <div className="bg-white rounded-[2rem] p-6 md:p-8 border-2 border-gray-900 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] mb-8 md:mb-10 relative overflow-hidden">
           {/* Decorative blobbies */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
           <div className="absolute top-0 left-0 w-32 h-32 bg-pink-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
@@ -119,7 +119,7 @@ export default function Home() {
           </form>
         </div>
 
-        <div className="bg-[#EDF5FD] rounded-[2rem] border-2 border-gray-900 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-8">
+        <div className="bg-[#EDF5FD] rounded-[2rem] border-2 border-gray-900 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-6 md:p-8">
           <h3 className="text-xl font-bold mb-6 text-gray-900 flex items-center gap-2">
             <span>✨</span> How it works
           </h3>
