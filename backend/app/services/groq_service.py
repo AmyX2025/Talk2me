@@ -45,8 +45,40 @@ class GroqService:
                 max_tokens=500
             )
             return response.choices[0].message.content
-        except Exception as e:
             raise Exception(f"Groq API错误: {str(e)}")
+
+    def transcribe_audio(self, audio_path: str) -> List[Dict]:
+        """
+        使用Groq Whisper模型转写音频 (极速)
+        
+        Args:
+            audio_path: 音频文件路径
+            
+        Returns:
+            句子列表 [{"text": "...", "start": 0.0, "end": 1.0}, ...]
+        """
+        try:
+            with open(audio_path, "rb") as file:
+                # 使用 Groq 的 Whisper Large V3 模型
+                transcription = self.client.audio.transcriptions.create(
+                    file=(audio_path, file.read()),
+                    model="whisper-large-v3",
+                    response_format="verbose_json",
+                    temperature=0.0
+                )
+            
+            # 转换格式以匹配原有 WhisperService 的输出
+            sentences = []
+            for segment in transcription.segments:
+                sentences.append({
+                    "text": segment["text"].strip(),
+                    "start": round(segment["start"], 2),
+                    "end": round(segment["end"], 2)
+                })
+            
+            return sentences
+        except Exception as e:
+            raise Exception(f"Groq转写错误: {str(e)}")
     
     def generate_role_play_prompt(
         self,

@@ -8,20 +8,11 @@ import os
 from typing import Dict, List
 from app.config import settings
 
-# 延迟导入Whisper，如果未安装则使用占位符
-try:
-    from app.services.whisper_service import WhisperService
-    WHISPER_AVAILABLE = True
-except ImportError:
-    WHISPER_AVAILABLE = False
-    print("警告: faster-whisper未安装，语音识别功能将不可用")
+from app.services.groq_service import GroqService
 
 class PodcastService:
     def __init__(self):
-        if WHISPER_AVAILABLE:
-            self.whisper = WhisperService()
-        else:
-            self.whisper = None
+        self.groq_service = GroqService()
         os.makedirs(settings.audio_storage_path, exist_ok=True)
     
     def _convert_apple_podcast_url(self, url: str) -> str:
@@ -221,10 +212,8 @@ class PodcastService:
                     info = ydl.extract_info(original_url, download=False)
                     title = info.get('title', 'Unknown')
                 
-                # 使用Whisper转写
-                if not self.whisper:
-                    raise Exception("Whisper未安装，请运行: pip install faster-whisper")
-                sentences = self.whisper.transcribe(audio_path)
+                # 使用 Groq 转写
+                sentences = self.groq_service.transcribe_audio(audio_path)
                 
                 audio_filename = os.path.basename(audio_path)
                 return {
@@ -323,10 +312,8 @@ class PodcastService:
             
             self._download_audio(audio_url, audio_path)
         
-        # 使用Whisper转写
-        if not self.whisper:
-            raise Exception("Whisper未安装，请运行: pip install faster-whisper")
-        sentences = self.whisper.transcribe(audio_path)
+        # 使用 Groq 转写
+        sentences = self.groq_service.transcribe_audio(audio_path)
         
         # 获取音频文件名（用于URL）
         audio_filename = os.path.basename(audio_path)
