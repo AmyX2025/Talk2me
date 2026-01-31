@@ -45,6 +45,7 @@ class GroqService:
                 max_tokens=500
             )
             return response.choices[0].message.content
+        except Exception as e:
             raise Exception(f"Groq API错误: {str(e)}")
 
     def transcribe_audio(self, audio_path: str) -> List[Dict]:
