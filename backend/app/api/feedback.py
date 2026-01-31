@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from app.services.groq_service import GroqService
 from datetime import datetime
+from typing import List, Dict
 
 router = APIRouter()
 groq_service = GroqService()
@@ -14,7 +15,6 @@ class FeedbackRequest(BaseModel):
     segment_text: str
     conversation_history: List[Dict[str, str]] = []
 
-from typing import List, Dict
 import json
 
 class FeedbackContent(BaseModel):
