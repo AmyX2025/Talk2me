@@ -48,9 +48,13 @@ class GroqService:
         except Exception as e:
             raise Exception(f"Groq API错误: {str(e)}")
 
+        except Exception as e:
+            raise Exception(f"Groq API错误: {str(e)}")
+
     def transcribe_audio(self, audio_path: str) -> List[Dict]:
         """
         使用Groq Whisper模型转写音频 (极速)
+        会自动处理大文件：如果超过24MB，则进行压缩
         
         Args:
             audio_path: 音频文件路径
@@ -58,17 +62,53 @@ class GroqService:
         Returns:
             句子列表 [{"text": "...", "start": 0.0, "end": 1.0}, ...]
         """
+        import os
+        from pydub import AudioSegment
+        
+        # Groq (类似于OpenAI) 的限制通常是 25MB
+        MAX_SIZE_BYTES = 24 * 1024 * 1024  # 24MB to be safe
+        file_to_upload = audio_path
+        is_temp_file = False
+        
         try:
-            with open(audio_path, "rb") as file:
-                # 使用 Groq 的 Whisper Large V3 模型
+            file_size = os.path.getsize(audio_path)
+            
+            # 如果文件过大，进行压缩
+            if file_size > MAX_SIZE_BYTES:
+                print(f"音频文件过大 ({file_size / 1024 / 1024:.2f} MB)，正在压缩...")
+                
+                # 加载音频
+                audio = AudioSegment.from_file(audio_path)
+                
+                # 转换为单声道，降低采样率和比特率
+                # 32k bitrate 对于语音识别通常足够，且能大幅减小体积 (约 0.25MB/分钟)
+                # 这样 24MB 可以容纳近 100 分钟的音频
+                audio = audio.set_channels(1).set_frame_rate(16000)
+                
+                # 创建临时文件路径
+                import tempfile
+                with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
+                    temp_path = tmp.name
+                
+                # 导出压缩后的音频
+                audio.export(temp_path, format="mp3", bitrate="32k")
+                
+                file_to_upload = temp_path
+                is_temp_file = True
+                
+                new_size = os.path.getsize(temp_path)
+                print(f"压缩完成，新大小: {new_size / 1024 / 1024:.2f} MB")
+            
+            # 开始转写
+            with open(file_to_upload, "rb") as file:
                 transcription = self.client.audio.transcriptions.create(
-                    file=(audio_path, file.read()),
+                    file=(file_to_upload, file.read()),
                     model="whisper-large-v3",
                     response_format="verbose_json",
                     temperature=0.0
                 )
             
-            # 转换格式以匹配原有 WhisperService 的输出
+            # 转换格式
             sentences = []
             for segment in transcription.segments:
                 sentences.append({
@@ -78,8 +118,16 @@ class GroqService:
                 })
             
             return sentences
+            
         except Exception as e:
             raise Exception(f"Groq转写错误: {str(e)}")
+        finally:
+            # 清理临时文件
+            if is_temp_file and os.path.exists(file_to_upload):
+                try:
+                    os.remove(file_to_upload)
+                except:
+                    pass
     
     def generate_role_play_prompt(
         self,
